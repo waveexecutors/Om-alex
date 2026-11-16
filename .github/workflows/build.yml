@@ -13,11 +13,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 8 (required by ForgeGradle 2 / Forge 1.12.2)
+      - name: Set up JDK 8 (compiles the mod) and JDK 21 (runs Gradle)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 8
+          java-version: |
+            8
+            21
 
       - name: Extract AlexFriendMod.zip
         run: |
@@ -40,33 +42,19 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-forge-1.12.2-${{ hashFiles('AlexFriendMod.zip') }}
+          key: gradle-rfg-1.12.2-${{ hashFiles('AlexFriendMod.zip') }}
           restore-keys: |
-            gradle-forge-1.12.2-
+            gradle-rfg-1.12.2-
 
-      - name: Install Gradle 4.10.3
+      - name: Install Gradle 8.12
         run: |
-          wget -q https://services.gradle.org/distributions/gradle-4.10.3-bin.zip -O /tmp/gradle.zip
+          wget -q https://services.gradle.org/distributions/gradle-8.12-bin.zip -O /tmp/gradle.zip
           unzip -q /tmp/gradle.zip -d /opt
-          echo "/opt/gradle-4.10.3/bin" >> "$GITHUB_PATH"
-
-      - name: Check Forge 1.12.2 download sources (diagnostics)
-        continue-on-error: true
-        run: |
-          V=1.12.2-14.23.5.2860
-          for base in https://maven.minecraftforge.net https://files.minecraftforge.net/maven https://bmclapi2.bangbang93.com/maven; do
-            echo "=================== $base"
-            echo "--- files listed in the version folder:"
-            curl -sL -m 30 "$base/net/minecraftforge/forge/$V/" | grep -oE 'forge-[A-Za-z0-9._-]+\.(jar|zip|txt)' | sort -u || true
-            for c in userdev userdev3 universal; do
-              code=$(curl -s -o /dev/null -L -m 30 -w '%{http_code}' "$base/net/minecraftforge/forge/$V/forge-$V-$c.jar" || echo curl-failed)
-              echo "forge-$V-$c.jar -> HTTP $code"
-            done
-          done
+          echo "/opt/gradle-8.12/bin" >> "$GITHUB_PATH"
 
       - name: Build mod jar
         working-directory: ${{ env.PROJECT_DIR }}
-        run: gradle build --no-daemon
+        run: gradle build --no-daemon --stacktrace
 
       - name: Upload jar
         uses: actions/upload-artifact@v4
