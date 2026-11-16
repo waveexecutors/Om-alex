@@ -50,6 +50,17 @@ jobs:
           unzip -q /tmp/gradle.zip -d /opt
           echo "/opt/gradle-4.10.3/bin" >> "$GITHUB_PATH"
 
+      - name: Check Forge 1.12.2 download sources (diagnostics)
+        continue-on-error: true
+        run: |
+          for u in \
+            https://maven.minecraftforge.net/net/minecraftforge/forge/1.12.2-14.23.5.2860/forge-1.12.2-14.23.5.2860-userdev.jar \
+            https://files.minecraftforge.net/maven/net/minecraftforge/forge/1.12.2-14.23.5.2860/forge-1.12.2-14.23.5.2860-userdev.jar \
+            https://bmclapi2.bangbang93.com/maven/net/minecraftforge/forge/1.12.2-14.23.5.2860/forge-1.12.2-14.23.5.2860-userdev.jar ; do
+            echo "== $u"
+            curl -sIL -m 30 "$u" | grep -E "^HTTP|^location" || true
+          done
+
       - name: Build mod jar
         working-directory: ${{ env.PROJECT_DIR }}
         run: gradle build --no-daemon --stacktrace
